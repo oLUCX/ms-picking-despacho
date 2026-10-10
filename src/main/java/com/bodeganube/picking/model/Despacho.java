@@ -7,6 +7,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 
@@ -18,8 +19,13 @@ public class Despacho {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // Referencia a la orden de ms-ordenes. No es una FK: cada microservicio tiene su propia base.
     @Column(nullable = false, unique = true)
     private Long ordenId;
+
+    // Empresa de transporte (Starken, Chilexpress, Blue Express...). Es obligatoria para despachar.
+    @Column(length = 60)
+    private String transportista;
 
     private String trackingNumber;
 
@@ -27,7 +33,20 @@ public class Despacho {
     @Column(nullable = false)
     private EstadoDespacho estado;
 
+    @Column(updatable = false)
+    private LocalDateTime fechaCreacion;
+
     private LocalDateTime fechaDespacho;
+
+    @PrePersist
+    void alCrear() {
+        if (fechaCreacion == null) {
+            fechaCreacion = LocalDateTime.now();
+        }
+        if (estado == null) {
+            estado = EstadoDespacho.EN_PREPARACION;
+        }
+    }
 
     public Long getId() {
         return id;
@@ -45,6 +64,14 @@ public class Despacho {
         this.ordenId = ordenId;
     }
 
+    public String getTransportista() {
+        return transportista;
+    }
+
+    public void setTransportista(String transportista) {
+        this.transportista = transportista;
+    }
+
     public String getTrackingNumber() {
         return trackingNumber;
     }
@@ -59,6 +86,14 @@ public class Despacho {
 
     public void setEstado(EstadoDespacho estado) {
         this.estado = estado;
+    }
+
+    public LocalDateTime getFechaCreacion() {
+        return fechaCreacion;
+    }
+
+    public void setFechaCreacion(LocalDateTime fechaCreacion) {
+        this.fechaCreacion = fechaCreacion;
     }
 
     public LocalDateTime getFechaDespacho() {
